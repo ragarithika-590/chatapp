@@ -13,7 +13,6 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     if (!user) {
-      // If user logs out, disconnect the socket
       if (socket) {
         socket.disconnect();
         setSocket(null);
@@ -21,25 +20,21 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
-    // Create socket connection when user logs in
-    const newSocket = io("http://localhost:5000", {
+    const newSocket = io(import.meta.env.VITE_SOCKET_URL || "http://localhost:5000", {
       transports: ["websocket"],
     });
 
     newSocket.on("connect", () => {
       console.log("Socket connected:", newSocket.id);
-      // Tell server this user is online
       newSocket.emit("user_online", user._id);
     });
 
-    // Listen for online users list updates
     newSocket.on("online_users", (users) => {
       setOnlineUsers(users);
     });
 
     setSocket(newSocket);
 
-    // Cleanup — disconnect when component unmounts or user changes
     return () => {
       newSocket.disconnect();
     };
